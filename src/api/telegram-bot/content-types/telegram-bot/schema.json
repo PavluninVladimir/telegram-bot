@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "telegram_bots",
+  "info": {
+    "singularName": "telegram-bot",
+    "pluralName": "telegram-bots",
+    "displayName": "TelegramBot",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "Name": {
+      "type": "string"
+    },
+    "Description": {
+      "type": "string"
+    },
+    "Token": {
+      "type": "string"
+    },
+    "user_telegram_bots": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::user-telegram-bot.user-telegram-bot",
+      "inversedBy": "telegram_bots"
+    }
+  }
+}
