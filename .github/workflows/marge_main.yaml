@@ -1,7 +1,9 @@
 name: Сборка, тегирование и создание Docker контейнера
 
 on:
-  push
+  push:
+    branches:
+      - main
 
 env:
   REGISTRY: ghcr.io
@@ -61,12 +63,6 @@ jobs:
         git config user.email github-actions@github.com
         git commit -m "Обновление версии в package.json"
 
-    # - name: Гит статус
-    #   run: | 
-    #     git status
-    #     git switch -c ${{ steps.get_branch_name.outputs.branch }}
-    #     git pull
-
     - name: Пуш изменений в текущую ветку
       run: |
         git push origin ${{ steps.get_branch_name.outputs.branch }} --force
@@ -83,9 +79,10 @@ jobs:
 
     - name: Extract metadata (tags, labels) for Docker
       id: meta
-      uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+      uses: docker/metadata-action@v4
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: ${{steps.increment_version.outputs.version}}
 
     - name: Build and push Docker image
       uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
