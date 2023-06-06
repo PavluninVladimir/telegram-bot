@@ -1,0 +1,96 @@
+name: Сборка, тегирование и создание Docker контейнера
+
+on:
+  push
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Проверка репозитория
+      uses: actions/checkout@v2
+
+    - name: Установка Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Установка зависимостей
+      run: npm install
+
+    - name: Сборка Strapi проекта
+      run: npm run build
+
+    - name: Получение имени ветки
+      id: get_branch_name
+      run: echo "::set-output name=branch::$(echo ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}})"
+
+    - name: Получение текущей версии
+      id: get_version
+      run: echo "::set-output name=version::$(node -p "require('./package.json').version")"
+
+    - name: Инкрементирование версии
+      id: increment_version
+      run: |
+        echo "::set-output name=version::$(node -p " \
+          const semver = require('semver'); \
+          const version = require('./package.json').version; \
+          const newVersion = version.split('.').map((v, i) => (i === 2 ? parseInt(v) + 1 : v)).join('.'); \
+          newVersion \
+        ")"
+
+    - name: Обновление package.json
+      run: |
+        newVersion=$(echo "${{ steps.increment_version.outputs.version }}")
+        jq --arg newVersion "$newVersion" '.version = $newVersion' package.json > tmp_package.json && mv tmp_package.json package.json
+
+    - name: Тегирование коммита
+      run: git tag ${{ steps.increment_version.outputs.version }}
+      
+    - name: Добавление изменений в коммит
+      run: git add .
+
+    - name: Создание коммита
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git commit -m "Обновление версии в package.json"
+
+    # - name: Гит статус
+    #   run: | 
+    #     git status
+    #     git switch -c ${{ steps.get_branch_name.outputs.branch }}
+    #     git pull
+
+    - name: Пуш изменений в текущую ветку
+      run: |
+        git push origin ${{ steps.get_branch_name.outputs.branch }} --force
+
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Log in to the Container registry
+      uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
