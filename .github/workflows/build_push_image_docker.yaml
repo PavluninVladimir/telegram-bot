@@ -2,8 +2,6 @@ name: Сборка, тегирование и создание Docker конте
 
 on:
   push:
-    branches:
-      - main
 
 env:
   REGISTRY: ghcr.io
