@@ -27,7 +27,7 @@ jobs:
       uses: docker/metadata-action@v4
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: ${{steps.increment_version.outputs.version}}
+        tags: ${{steps.increment_version.outputs.version}}, latest
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
