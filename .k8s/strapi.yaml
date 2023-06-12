@@ -28,4 +28,6 @@ spec:
         - name: telegram-bot
           image: ghcr.io/pavluninvladimir/telegram-bot:feature-create_image_docker
           ports:
-            - containerPort: 8080
+            - containerPort: 1337
+      imagePullSecrets:
+        - name: github-registry
