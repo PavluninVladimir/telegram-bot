@@ -2,6 +2,8 @@ name: Сборка, тегирование и создание Docker конте
 
 on:
   push:
+    branches:
+      - main
 
 env:
   REGISTRY: ghcr.io
@@ -32,7 +34,9 @@ jobs:
       uses: docker/metadata-action@v4
       with:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: $VERSION, latest
+        tags: | 
+          type=raw, value=${{ env.VERSION }}
+          type=raw, value=latest
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
