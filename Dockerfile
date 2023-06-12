@@ -29,4 +29,5 @@ RUN npm run build
 EXPOSE 1337
 
 # Запускаем Strapi
-CMD ["npm", "run", "start"]
+# CMD ["npm", "run", "start"]
+CMD ["sleep", "10000000"]
